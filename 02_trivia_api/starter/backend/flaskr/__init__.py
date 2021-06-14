@@ -16,16 +16,30 @@ def create_app(test_config=None):
     '''
     @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     '''
+    cors = CORS(app, resources={r"/api/*": {'origins': "*"}})
 
     '''
     @TODO: Use the after_request decorator to set Access-Control-Allow
     '''
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization, true')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, PATCH, POST, DELETE, OPTIONS')
+        return response
 
     '''
     @TODO:
     Create an endpoint to handle GET requests
     for all available categories.
     '''
+    @app.route('/categories')
+    def get_categories():
+        categories = Category.query.order_by('id').all()
+
+        return jsonify({
+            'success': True,
+            'categories': categories
+        })
 
 
     '''
@@ -40,6 +54,23 @@ def create_app(test_config=None):
     ten questions per page and pagination at the bottom of the screen for three pages.
     Clicking on the page numbers should update the questions.
     '''
+    @app.route('/questions')
+    def get_questions():
+        questions = Question.query.order_by('id').all()
+
+        page = request.args.get('page', 1, type=int)
+        start = (page - 1) * 10
+        end = start + 10
+
+        formatted_questions = [question.format() for question in questions]
+
+        return jsonify({
+            'success': True,
+            'questions': formatted_questions[start:end],
+            'total_questions': len(questions),
+            'current_category': None,
+            'categories': None
+        })
 
     '''
     @TODO:
@@ -48,6 +79,10 @@ def create_app(test_config=None):
     TEST: When you click the trash icon next to a question, the question will be removed.
     This removal will persist in the database and when you refresh the page.
     '''
+    @app.route('/delete/question/<int:question_id>', methods=['DELETE'])
+    def delete_question(question_id):
+        question = Question.query.filter(id=question_id)
+        question.delete()
 
     '''
     @TODO:
@@ -59,6 +94,16 @@ def create_app(test_config=None):
     the form will clear and the question will appear at the end of the last page
     of the questions list in the "List" tab.
     '''
+    @app.route('/add/question', methods=['POST'])
+    def add_question():
+        new_question = Question(
+            question=request.form.get('question', None),
+            answer=request.form.get('answer', None),
+            category=request.form.get('category', None),
+            difficulty=request.form.get('difficulty', None)
+        )
+
+        new_question.insert()
 
     '''
     @TODO:
@@ -70,6 +115,15 @@ def create_app(test_config=None):
     only question that include that string within their question.
     Try using the word "title" to start.
     '''
+    @app.route('/search/questions', methods=['POST'])
+    def search_questions():
+        search_term = request.form.get('search_term')
+        question_query = Question.query.filter(Question.question.ilike('%' + search_term + '%')).all()
+
+        return jsonify({
+            'success': True,
+            'questions': question_query
+        })
 
     '''
     @TODO:
@@ -79,6 +133,9 @@ def create_app(test_config=None):
     categories in the left column will cause only questions of that
     category to be shown.
     '''
+    @app.route('/questions/category')
+    def get_category_questions():
+        pass
 
 
     '''
@@ -92,11 +149,45 @@ def create_app(test_config=None):
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not.
     '''
+    @app.route('/questions/play', methods=['POST'])
+    def play_question():
+        pass
 
     '''
     @TODO:
     Create error handlers for all expected errors
     including 404 and 422.
     '''
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return jsonify({
+            'success': False,
+            'error': 404,
+            'message': "Not found error"
+        }), 404
+
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        return jsonify({
+            'success': False,
+            'error': 403,
+            'message': "Forbidden error"
+        }), 403
+
+    @app.errorhandler(401)
+    def unauthorized_error(error):
+        return jsonify({
+            'success': False,
+            'error': 401,
+            'message': "Unauthorized error"
+        }), 401
+
+    @app.errorhandler(500)
+    def internal_server_error(error):
+        return jsonify({
+            'success': False,
+            'error': 500,
+            'message': "Internal server error"
+        }), 500
 
     return app

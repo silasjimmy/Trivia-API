@@ -149,20 +149,32 @@ def create_app(test_config=None):
 
         data = request.get_json()
 
-        try:
-            new_question = Question(
-                question=data.get('question', None),
-                answer=data.get('answer', None),
-                category=data.get('category', None),
-                difficulty=data.get('difficulty', None)
-            )
+        # Check if the json object has empty data
+        has_empty_data = False
+        data_dict = dict(data)
+        
+        for d in data_dict:
+            if data_dict[d] == '':
+                has_empty_data = True
+                break
 
-            new_question.insert()
+        if not has_empty_data:
+            try:
+                new_question = Question(
+                    question=data.get('question'),
+                    answer=data.get('answer'),
+                    category=data.get('category'),
+                    difficulty=data.get('difficulty')
+                )
 
-            return jsonify({
-                'success': True
-            })
-        except Exception:
+                new_question.insert()
+
+                return jsonify({
+                    'success': True
+                })
+            except Exception:
+                abort(422)
+        else:
             abort(422)
 
     @app.route('/search/questions', methods=['POST'])

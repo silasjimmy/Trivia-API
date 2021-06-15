@@ -36,18 +36,48 @@ class TriviaTestCase(unittest.TestCase):
     """
 
     def test_get_categories(self):
+        '''
+        Tests the GET request for categories
+        '''
+
         response = self.client().get('/categories')
+        response_data = json.loads(response.data)
+
+        # make assertions on the response data
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_data['success'], True)
+        self.assertTrue(response_data['categories'])
 
     def test_get_questions(self):
+        '''
+        Tests the GET request for paginated questions
+        '''
+
         response = self.client().get('/questions')
+        response_data = json.loads(response.data)
+
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_data['success'], True)
+        self.assertTrue(response_data['categories'])
+        self.assertTrue(response_data['total_questions'])
+        self.assertTrue(response_data['questions'])
 
     def test_delete_question(self):
+        '''
+        Tests the DELETE request to delete a question
+        '''
+
         response = self.client().delete('/questions/5')
+        response_data = json.loads(response.data)
+
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_data['success'], True)
 
     def test_add_question(self):
+        '''
+        Tests the POST request to add a new question
+        '''
+
         data = {
             'question': 'Who is the strongest man alive',
             'answer': 'no one',
@@ -56,21 +86,47 @@ class TriviaTestCase(unittest.TestCase):
         }
 
         response = self.client().post('/questions', json=data)
+        response_data = json.loads(response.data)
+
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_data['success'], True)
 
     def test_search_questions(self):
+        '''
+        Tests the POST request to search for a question
+        '''
+
         request_data = {
             'searchTerm': '1930',
         }
 
         response = self.client().post('/search/questions', json=request_data)
+        response_data = json.loads(response.data)
+
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_data['success'], True)
+        self.assertTrue(response_data['questions'])
+        self.assertTrue(response_data['total_questions'])
 
     def test_get_category_questions(self):
+        '''
+        Tests the GET request for getting questions by category
+        '''
+        
         response = self.client().get('/categories/1/questions')
+        response_data = json.loads(response.data)
+
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_data['success'], True)
+        self.assertTrue(response_data['questions'])
+        self.assertTrue(response_data['total_questions'])
+        self.assertTrue(response_data['current_category'])
 
     def test_play_question(self):
+        '''
+        Tests the POST request for playing questions
+        '''
+
         request_data = {
             'previous_questions': [5, 9],
             'quiz_category': {
@@ -80,8 +136,11 @@ class TriviaTestCase(unittest.TestCase):
         }
 
         response = self.client().post('/quizzes', json=request_data)
-        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.data)
 
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_data['success'], True)
+        self.assertTrue(response_data['question'])
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

@@ -258,13 +258,13 @@ def create_app(test_config=None):
             'message': "Not found error"
         }), 404
 
-    @app.errorhandler(403)
-    def forbidden_error(error):
+    @app.errorhandler(400)
+    def bad_request_error(error):
         return jsonify({
             'success': False,
-            'error': 403,
-            'message': "Forbidden error"
-        }), 403
+            'error': 400,
+            'message': "Bad request error"
+        }), 400
 
     @app.errorhandler(422)
     def unprocessable_entity_error(error):
